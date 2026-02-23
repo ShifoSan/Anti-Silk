@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Anti-Silk · By ShifoSan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+<style>
+/* ─────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────── */
+:root {
+  --bg:          #09090B;
+  --glass-bg:    rgba(255,255,255,0.03);
+  --glass-hover: rgba(255,255,255,0.055);
+  --border:      rgba(255,255,255,0.10);
+  --border-dim:  rgba(255,255,255,0.055);
+  --text:        #F4F4F5;
+  --muted:       #71717A;
+  --accent:      #3B82F6;
+  --accent-glow: rgba(59,130,246,0.45);
+  --accent-soft: rgba(59,130,246,0.15);
+  --teal:        #14B8A6;
+  --teal-glow:   rgba(20,184,166,0.35);
+  --danger:      #EF4444;
+  --code-bg:     rgba(0,0,0,0.55);
+  --user-bubble: rgba(59,130,246,0.12);
+  --ai-bubble:   rgba(255,255,255,0.035);
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-pill: 999px;
+  --blur:        blur(20px);
+  --blur-sm:     blur(12px);
+  --font-ui:     'Instrument Sans', sans-serif;
+  --font-display:'Syne', sans-serif;
+  --font-mono:   'JetBrains Mono', monospace;
+  --header-h:    62px;
+  --input-z:     62px;
+  --drawer-w:    300px;
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient bg glow */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -180px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  height: 380px;
+  background: radial-gradient(ellipse at center, rgba(59,130,246,0.09) 0%, rgba(20,184,166,0.04) 50%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+button { background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; }
+input, textarea { font-family: inherit; color: inherit; background: none; outline: none; border: none; resize: none; }
+ul { list-style: none; }
+a { color: inherit; text-decoration: none; }
+
+/* ─────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+/* ─────────────────────────────────────────
+   KEYFRAMES
+───────────────────────────────────────── */
+@keyframes titleGlow {
+  0%,100% {
+    text-shadow:
+      0 0 12px rgba(59,130,246,0.7),
+      0 0 30px rgba(59,130,246,0.4),
+      0 0 60px rgba(59,130,246,0.15);
+  }
+  50% {
+    text-shadow:
+      0 0 20px rgba(59,130,246,1),
+      0 0 50px rgba(59,130,246,0.65),
+      0 0 90px rgba(59,130,246,0.25),
+      0 0 140px rgba(59,130,246,0.1);
+  }
+}
+
+@keyframes taglinePulse {
+  0%,100% { opacity: 0.38; letter-spacing: 0.16em; }
+  50%      { opacity: 0.62; letter-spacing: 0.20em; }
+}
+
+@keyframes dotPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.6); }
+}
+
+@keyframes terminalBlink {
+  0%,49% { opacity: 1; }
+  50%,100%{ opacity: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes drawerSlide {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.94) translateY(16px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes scanLine {
+  0%   { top: -5%; }
+  100% { top: 105%; }
+}
+
+/* ─────────────────────────────────────────
+   APP SHELL
+───────────────────────────────────────── */
+.app {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────
+   HEADER
+───────────────────────────────────────── */
+.header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(9,9,11,0.85);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 80px;
+}
+.header-right { justify-content: flex-end; }
+
+.header-btn {
+  width: 38px; height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  transition: color .2s, background .2s;
+}
+.header-btn:hover { background: var(--glass-hover); color: var(--text); }
+.header-btn svg { width: 20px; height: 20px; stroke-width: 1.6; }
+
+.header-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.site-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  animation: titleGlow 3.5s ease-in-out infinite;
+}
+
+.site-tagline {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  animation: taglinePulse 4s ease-in-out infinite;
+}
+
+/* Persona active badge */
+.persona-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--teal);
+  background: rgba(20,184,166,0.08);
+  border: 1px solid rgba(20,184,166,0.25);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  margin-top: 2px;
+}
+.persona-badge::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+.danger-btn {
+  color: var(--muted);
+  transition: color .2s;
+}
+.danger-btn:hover { color: var(--danger); }
+
+/* ─────────────────────────────────────────
+   CHAT ARENA
+───────────────────────────────────────── */
+.chat-arena {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Day separator */
+.day-sep {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.day-sep::before,.day-sep::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+/* Message row */
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeUp .35s ease both;
+}
+.msg-row.user { align-items: flex-end; }
+.msg-row.ai   { align-items: flex-start; }
+
+.msg-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+  font-family: var(--font-mono);
+  padding: 0 4px;
+}
+.msg-avatar {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.ai-avatar { background: linear-gradient(135deg, var(--accent), var(--teal)); color: #fff; }
+.user-avatar { background: rgba(255,255,255,0.1); color: var(--muted); }
+
+.bubble {
+  max-width: 85%;
+  padding: 12px 15px;
+  border-radius: var(--radius-md);
+  line-height: 1.65;
+  font-size: 14.5px;
+  border: 1px solid var(--border-dim);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+}
+.bubble.user {
+  background: var(--user-bubble);
+  border-color: rgba(59,130,246,0.2);
+  border-bottom-right-radius: 4px;
+}
+.bubble.ai {
+  background: var(--ai-bubble);
+  border-bottom-left-radius: 4px;
+}
+
+/* Code block */
+.code-block {
+  margin: 10px 0;
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  max-width: 340px;
+}
+.code-header {
+  display: flex; align-items: center;
+  padding: 7px 12px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border-dim);
+  gap: 8px;
+}
+.lang-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--teal);
+  background: rgba(20,184,166,0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.code-actions {
+  margin-left: auto;
+  display: flex; gap: 6px;
+}
+.code-act-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  padding: 3px 8px;
+  transition: color .2s, background .2s;
+}
+.code-act-btn:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+.code-act-btn.canvas { color: var(--accent); }
+pre {
+  padding: 14px 14px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #A5B4FC;
+}
+pre .kw  { color: #7DD3FC; }
+pre .str { color: #86EFAC; }
+pre .fn  { color: #FCA5A5; }
+pre .cm  { color: #4B5563; font-style: italic; }
+
+/* Terminal bubble */
+.terminal-bubble {
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(20,184,166,0.25);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.term-header {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.term-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: dotPulse 1.5s infinite; }
+.term-line {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.term-line::before { content: '>'; color: var(--teal); font-weight: 700; }
+.cursor {
+  display: inline-block; width: 6px; height: 13px;
+  background: var(--teal); border-radius: 1px;
+  animation: terminalBlink 1s step-end infinite;
+}
+
+/* ─────────────────────────────────────────
+   IMAGE VISION PREVIEW
+───────────────────────────────────────── */
+.vision-preview {
+  padding: 10px 16px 0;
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.vision-thumb {
+  position: relative;
+  width: 58px; height: 58px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.vision-thumb-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: brightness(0.7);
+}
+.vision-thumb-placeholder {
+  color: var(--muted);
+  font-size: 22px;
+}
+.vision-remove {
+  position: absolute; top: 3px; right: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  color: var(--muted);
+  font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ─────────────────────────────────────────
+   INPUT ZONE
+───────────────────────────────────────── */
+.input-zone {
+  flex-shrink: 0;
+  background: rgba(9,9,11,0.85);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top: 1px solid var(--border-dim);
+  padding: 10px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 50;
+}
+
+/* Agent mode toggle */
+.agent-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2px;
+}
+.agent-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+.agent-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0.6; }
+.toggle {
+  width: 40px; height: 22px;
+  background: rgba(59,130,246,0.35);
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(59,130,246,0.5);
+  position: relative;
+  flex-shrink: 0;
+}
+.toggle-thumb {
+  position: absolute;
+  right: 3px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* Input bar */
+.input-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 10px 10px 10px 14px;
+  transition: border-color .2s;
+}
+.input-bar:focus-within {
+  border-color: rgba(59,130,246,0.4);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.07);
+}
+.input-attach {
+  color: var(--muted); flex-shrink: 0;
+  padding: 2px;
+  transition: color .2s;
+}
+.input-attach:hover { color: var(--text); }
+.input-attach svg { width: 20px; height: 20px; }
+.input-field {
+  flex: 1;
+  min-height: 22px;
+  max-height: 130px;
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.55;
+  padding: 0;
+}
+.input-field::placeholder { color: var(--muted); }
+.input-actions {
+  display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
+.input-icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  transition: color .2s, background .2s;
+}
+.input-icon-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+.input-icon-btn svg { width: 18px; height: 18px; }
+.send-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #2563EB);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 16px rgba(59,130,246,0.4);
+  transition: transform .2s, box-shadow .2s;
+}
+.send-btn:hover { transform: scale(1.07); box-shadow: 0 0 22px rgba(59,130,246,0.6); }
+.send-btn svg { width: 16px; height: 16px; color: #fff; }
+
+/* ─────────────────────────────────────────
+   DRAWER
+───────────────────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.drawer {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--drawer-w);
+  z-index: 910;
+  background: rgba(12,12,15,0.92);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlide .28s cubic-bezier(.16,1,.3,1) both;
+  overflow: hidden;
+}
+
+.drawer-top {
+  padding: 16px 14px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-dim);
+}
+.drawer-logo {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 800;
+  color: #fff;
+  animation: titleGlow 3.5s ease-in-out infinite;
+}
+.drawer-close {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, color .2s;
+}
+.drawer-close:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+.new-chat-btn {
+  margin: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(59,130,246,0.07));
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-size: 14px; font-weight: 600;
+  color: var(--accent);
+  transition: background .2s, border-color .2s;
+}
+.new-chat-btn:hover { background: rgba(59,130,246,0.22); border-color: rgba(59,130,246,0.5); }
+.new-chat-btn svg { width: 18px; height: 18px; }
+
+.drawer-scroll { flex: 1; overflow-y: auto; }
+
+.nav-section { padding: 8px 14px; }
+.nav-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  padding: 8px 2px 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  position: relative;
+}
+.nav-item:hover { background: var(--glass-hover); color: var(--text); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: rgba(59,130,246,0.18);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+
+/* Spaces sub-structure */
+.space-folder {
+  margin: 4px 0;
+  border-left: 1px solid var(--border-dim);
+  margin-left: 12px;
+  padding-left: 10px;
+}
+.space-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.space-item:hover { background: var(--glass-hover); color: var(--text); }
+.space-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* Artifacts grid */
+.artifacts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 0;
+}
+.artifact-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.artifact-card:hover { background: var(--glass-hover); border-color: var(--border); }
+.artifact-lang {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--teal);
+  margin-bottom: 5px;
+}
+.artifact-name {
+  font-size: 11.5px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.artifact-time { font-size: 10px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); }
+
+/* Recent chats */
+.recent-chat-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s;
+}
+.recent-chat-item:hover { background: var(--glass-hover); }
+.recent-chat-item svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+.recent-title {
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.65);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.drawer-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+.export-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--muted);
+  transition: background .15s, color .15s;
+}
+.export-btn:hover { background: var(--glass-hover); color: var(--text); }
+.export-btn svg { width: 16px; height: 16px; }
+
+/* ─────────────────────────────────────────
+   MODALS
+───────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 950;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 0;
+}
+
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: rgba(14,14,18,0.96);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  animation: modalScale .3s cubic-bezier(.16,1,.3,1) both;
+  overflow: hidden;
+  max-height: 82dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700;
+  color: var(--text);
+}
+.modal-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.modal-close {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+.modal-body { flex: 1; overflow-y: auto; padding: 16px 20px 24px; }
+
+/* Personas modal */
+.persona-list { display: flex; flex-direction: column; gap: 10px; }
+.persona-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.persona-card:hover { background: var(--glass-hover); }
+.persona-card.active { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.06); }
+.persona-icon {
+  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.persona-info { flex: 1; min-width: 0; }
+.persona-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.persona-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.persona-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #fff;
+  box-shadow: 0 0 8px var(--accent-glow);
+  flex-shrink: 0; margin-top: 2px;
+}
+
+.modal-create-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--glass-bg);
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-size: 13.5px; color: var(--muted);
+  margin-top: 14px;
+  transition: border-color .2s, color .2s;
+}
+.modal-create-btn:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+.modal-create-btn svg { width: 16px; height: 16px; }
+
+/* Prompt vault */
+.vault-search {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  margin-bottom: 14px;
+}
+.vault-search svg { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
+.vault-search input { flex: 1; font-size: 13px; color: var(--text); }
+.vault-search input::placeholder { color: var(--muted); }
+
+.vault-list { display: flex; flex-direction: column; gap: 8px; }
+.vault-item {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  transition: background .2s;
+}
+.vault-item:hover { background: var(--glass-hover); }
+.vault-tag {
+  font-family: var(--font-mono); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 2px 7px; border-radius: 4px;
+  flex-shrink: 0;
+}
+.vault-info { flex: 1; min-width: 0; }
+.vault-title { font-size: 13.5px; font-weight: 500; color: var(--text); }
+.vault-preview { font-size: 11.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vault-use-btn {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--accent); background: var(--accent-soft);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 4px; padding: 3px 9px;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.vault-use-btn:hover { background: rgba(59,130,246,0.25); }
+
+/* API/Model modal */
+.api-field {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 16px;
+}
+.api-label { font-size: 11.5px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.06em; }
+.api-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 13.5px;
+  color: var(--text);
+  width: 100%;
+  font-family: var(--font-mono);
+  transition: border-color .2s;
+}
+.api-input:focus { border-color: rgba(59,130,246,0.4); outline: none; }
+.model-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.model-pill {
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-dim);
+  font-size: 12.5px; font-family: var(--font-mono);
+  color: var(--muted); cursor: pointer;
+  transition: all .2s;
+}
+.model-pill.sel {
+  background: var(--accent-soft);
+  border-color: rgba(59,130,246,0.4);
+  color: var(--accent);
+}
+.modal-save-btn {
+  width: 100%; margin-top: 20px;
+  background: linear-gradient(135deg, var(--accent), #2563EB);
+  border: none; border-radius: var(--radius-sm);
+  padding: 13px;
+  font-size: 14px; font-weight: 600;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.modal-save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 26px rgba(59,130,246,0.5); }
+
+/* ─────────────────────────────────────────
+   CANVAS OVERLAY
+───────────────────────────────────────── */
+.canvas-overlay {
+  position: fixed; inset: 0; z-index: 980;
+  background: #080809;
+  display: flex; flex-direction: column;
+}
+.canvas-topbar {
+  height: 54px;
+  background: rgba(12,12,15,0.95);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border-dim);
+  display: flex; align-items: center; gap: 0;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+.canvas-back {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); transition: color .2s, background .2s;
+}
+.canvas-back:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.canvas-back svg { width: 20px; height: 20px; }
+.canvas-title {
+  flex: 1; text-align: center;
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--muted); letter-spacing: 0.05em;
+  margin-left: -40px;
+}
+.canvas-tabs {
+  display: flex; gap: 4px;
+}
+.canvas-tab {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px; font-family: var(--font-mono);
+  color: var(--muted); cursor: pointer;
+  transition: background .15s, color .15s;
+  border: 1px solid transparent;
+}
+.canvas-tab.active {
+  background: var(--accent-soft);
+  border-color: rgba(59,130,246,0.3);
+  color: var(--accent);
+}
+.canvas-body {
+  flex: 1; overflow: hidden;
+  position: relative;
+}
+.canvas-preview {
+  width: 100%; height: 100%;
+  background: #0F0F12;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.canvas-preview::after {
+  content: '';
+  position: absolute;
+  top: -5%; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(59,130,246,0.6), transparent);
+  animation: scanLine 4s linear infinite;
+}
+.canvas-placeholder {
+  text-align: center;
+}
+.canvas-placeholder-icon {
+  font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.3;
+}
+.canvas-placeholder p { color: var(--muted); font-size: 13px; font-family: var(--font-mono); }
+.canvas-code-view {
+  width: 100%; height: 100%;
+  background: var(--code-bg);
+  padding: 20px 18px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: #A5B4FC;
+}
+.canvas-code-view.hidden { display: none; }
+.line-num {
+  display: inline-block;
+  width: 28px;
+  color: rgba(255,255,255,0.18);
+  margin-right: 14px;
+  text-align: right;
+  user-select: none;
+  font-size: 11px;
+}
+
+/* ─────────────────────────────────────────
+   SECTION VISIBILTIY HELPERS
+───────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ─────────────────────────────────────────
+   UTILITY
+───────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-dim), transparent);
+  margin: 4px 0;
+}
+
+/* shimmer for loading state */
+.shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────
+   DESKTOP HINT
+───────────────────────────────────────── */
+@media (min-width: 481px) {
+  .app { box-shadow: 0 0 80px rgba(0,0,0,0.8); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     MAIN APP SHELL
+══════════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="header-left">
+      <!-- Hamburger -->
+      <button class="header-btn" id="menuBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="7"  x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="15" y2="17"/></svg>
+      </button>
+      <!-- API Vault -->
+      <button class="header-btn" id="vaultBtn" aria-label="API Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
+    </div>
+
+    <div class="header-center">
+      <span class="site-title">Anti-Silk</span>
+      <span class="site-tagline">By ShifoSan, For ShifoSan</span>
+      <span class="persona-badge">ShifoSan Core</span>
+    </div>
+
+    <div class="header-right">
+      <!-- Clear chat -->
+      <button class="header-btn danger-btn" id="clearBtn" aria-label="Clear Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── CHAT ARENA ── -->
+  <main class="chat-arena" id="chatArena">
+
+    <div class="day-sep">Today</div>
+
+    <!-- AI greeting -->
+    <div class="msg-row ai">
+      <div class="msg-meta">
+        <div class="msg-avatar ai-avatar">A</div>
+        <span>Anti-Silk</span>
+        <span>10:17 AM</span>
+      </div>
+      <div class="bubble ai">
+        Welcome back. I'm running on <strong>claude-3-5-sonnet</strong> with your ShifoSan Core persona active. What are we building today?
+      </div>
+    </div>
+
+    <!-- User message -->
+    <div class="msg-row user">
+      <div class="msg-meta" style="flex-direction:row-reverse">
+        <div class="msg-avatar user-avatar">S</div>
+        <span>10:18 AM</span>
+      </div>
+      <div class="bubble user">
+        Write me a Python function that recursively flattens a nested list structure.
+      </div>
+    </div>
+
+    <!-- AI with code block -->
+    <div class="msg-row ai">
+      <div class="msg-meta">
+        <div class="msg-avatar ai-avatar">A</div>
+        <span>Anti-Silk</span>
+        <span>10:18 AM</span>
+      </div>
+      <div class="bubble ai">
+        Sure. Here's a clean recursive implementation:
+        <div class="code-block">
+          <div class="code-header">
+            <span class="lang-tag">Python</span>
+            <div class="code-actions">
+              <button class="code-act-btn">Copy</button>
+              <button class="code-act-btn canvas" id="openCanvas">Canvas</button>
+            </div>
+          </div>
+          <pre><span class="kw">def</span> <span class="fn">flatten</span>(lst):
+    <span class="cm">"""Recursively flatten nested lists."""</span>
+    result = []
+    <span class="kw">for</span> item <span class="kw">in</span> lst:
+        <span class="kw">if</span> <span class="fn">isinstance</span>(item, list):
+            result.<span class="fn">extend</span>(<span class="fn">flatten</span>(item))
+        <span class="kw">else</span>:
+            result.<span class="fn">append</span>(item)
+    <span class="kw">return</span> result
+
+<span class="cm"># Example usage</span>
+nested = [<span class="str">1</span>, [<span class="str">2</span>, [<span class="str">3</span>, <span class="str">4</span>]], [<span class="str">5</span>, <span class="str">6</span>]]
+<span class="fn">print</span>(<span class="fn">flatten</span>(nested))  <span class="cm"># [1, 2, 3, 4, 5, 6]</span></pre>
+        </div>
+        Works for arbitrarily deep nesting. Want a generator version for memory efficiency?
+      </div>
+    </div>
+
+    <!-- User -->
+    <div class="msg-row user">
+      <div class="msg-meta" style="flex-direction:row-reverse">
+        <div class="msg-avatar user-avatar">S</div>
+        <span>10:19 AM</span>
+      </div>
+      <div class="bubble user">
+        Yes! Also run it in Agent Mode to test edge cases automatically.
+      </div>
+    </div>
+
+    <!-- Terminal / Agent bubble -->
+    <div class="msg-row ai">
+      <div class="msg-meta">
+        <div class="msg-avatar ai-avatar">A</div>
+        <span>Anti-Silk · Agent Mode</span>
+        <span>10:19 AM</span>
+      </div>
+      <div class="terminal-bubble">
+        <div class="term-header">
+          <div class="term-dot"></div>
+          Agent Active
+        </div>
+        <div class="term-line">Spawning test runner environment</div>
+        <div class="term-line">Generating edge case matrix&nbsp;<span class="cursor"></span></div>
+        <div class="term-line" style="color:rgba(134,239,172,0.8)">✓ Empty list [] — passed</div>
+        <div class="term-line" style="color:rgba(134,239,172,0.8)">✓ Single element — passed</div>
+        <div class="term-line" style="color:rgba(134,239,172,0.8)">✓ Deep nesting depth 12 — passed</div>
+        <div class="term-line">Synthesizing results&nbsp;<span class="cursor"></span></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── VISION PREVIEW ── -->
+  <div class="vision-preview" id="visionPreview">
+    <div class="vision-thumb">
+      <div class="vision-thumb-placeholder">🖼</div>
+      <button class="vision-remove">✕</button>
+    </div>
+  </div>
+
+  <!-- ── INPUT ZONE ── -->
+  <div class="input-zone">
+    <div class="agent-toggle-row">
+      <div class="agent-label">
+        <div class="agent-dot"></div>
+        Agent Mode
+      </div>
+      <div class="toggle">
+        <div class="toggle-thumb"></div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <button class="input-attach" aria-label="Attach image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <textarea class="input-field" placeholder="Message Anti-Silk…" rows="1"></textarea>
+      <div class="input-actions">
+        <button class="input-icon-btn" aria-label="Voice input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8"  y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="send-btn" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════════
+     DRAWER
+══════════════════════════════════════════ -->
+<div class="drawer-overlay hidden" id="drawerOverlay"></div>
+<aside class="drawer hidden" id="drawer">
+  <div class="drawer-top">
+    <span class="drawer-logo">Anti-Silk</span>
+    <button class="drawer-close" id="drawerClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <button class="new-chat-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    New Chat
+  </button>
+
+  <div class="drawer-scroll">
+    <!-- Navigation -->
+    <div class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Chats
+        <span class="nav-badge">7</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Spaces
+        <span class="nav-badge">3</span>
+      </div>
+
+      <!-- Spaces sub-tree -->
+      <div class="space-folder">
+        <div class="space-item">
+          <div class="space-dot" style="background:#7DD3FC"></div>
+          Dev Projects
+        </div>
+        <div class="space-item">
+          <div class="space-dot" style="background:#86EFAC"></div>
+          Research
+        </div>
+        <div class="space-item">
+          <div class="space-dot" style="background:#FCA5A5"></div>
+          Personal
+        </div>
+      </div>
+
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Artifacts
+      </div>
+
+      <!-- Artifacts grid -->
+      <div class="artifacts-grid" style="padding: 4px 2px 8px;">
+        <div class="artifact-card">
+          <div class="artifact-lang">PY</div>
+          <div class="artifact-name">flatten.py</div>
+          <div class="artifact-time">Just now</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-lang">JS</div>
+          <div class="artifact-name">api-client.js</div>
+          <div class="artifact-time">2h ago</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-lang">HTML</div>
+          <div class="artifact-name">dashboard.html</div>
+          <div class="artifact-time">Yesterday</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-lang">SQL</div>
+          <div class="artifact-name">schema.sql</div>
+          <div class="artifact-time">3d ago</div>
+        </div>
+      </div>
+
+      <div class="nav-item" id="personasNavBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Personas
+      </div>
+      <div class="nav-item" id="vaultNavBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Prompt Vault
+      </div>
+    </div>
+
+    <div class="divider" style="margin: 0 14px;"></div>
+
+    <!-- Recent chats -->
+    <div class="nav-section">
+      <div class="nav-label">Recent Chats</div>
+      <div class="recent-chat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="recent-title">Flatten nested list Python</span>
+      </div>
+      <div class="recent-chat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="recent-title">Write single file HTML dashboard</span>
+      </div>
+      <div class="recent-chat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="recent-title">Explain Newton's theory of relativity</span>
+      </div>
+      <div class="recent-chat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="recent-title">Rule-based recommendation engine</span>
+      </div>
+      <div class="recent-chat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="recent-title">Redis pub-sub architecture deep dive</span>
+      </div>
+      <div class="recent-chat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="recent-title">Draft investor update email</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-footer">
+    <button class="export-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export Backup
+    </button>
+  </div>
+</aside>
+
+
+<!-- ═══════════════════════════════════════
+     PERSONAS MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="personasModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Personas</div>
+        <div class="modal-sub">System prompt templates for different modes</div>
+      </div>
+      <button class="modal-close" id="personasClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="persona-list">
+        <div class="persona-card active">
+          <div class="persona-icon" style="background:rgba(59,130,246,0.12)">🧠</div>
+          <div class="persona-info">
+            <div class="persona-name">ShifoSan Core</div>
+            <div class="persona-desc">Default persona — direct, technical, no fluff. Optimized for code and architecture.</div>
+          </div>
+          <div class="persona-check">✓</div>
+        </div>
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(20,184,166,0.12)">⚗️</div>
+          <div class="persona-info">
+            <div class="persona-name">Research Analyst</div>
+            <div class="persona-desc">Deep-dive mode with citations, structured summaries, and Socratic questioning.</div>
+          </div>
+        </div>
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(251,191,36,0.12)">✍️</div>
+          <div class="persona-info">
+            <div class="persona-name">Creative Writer</div>
+            <div class="persona-desc">Expressive, narrative-forward. Strong voice, vivid prose, minimal caveats.</div>
+          </div>
+        </div>
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(239,68,68,0.12)">🔴</div>
+          <div class="persona-info">
+            <div class="persona-name">Red Team</div>
+            <div class="persona-desc">Adversarial critic mode — poke holes, find flaws, challenge assumptions.</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="modal-create-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create New Persona
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     PROMPT VAULT MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="vaultModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Prompt Vault</div>
+        <div class="modal-sub">Saved templates & reusable prompts</div>
+      </div>
+      <button class="modal-close" id="vaultClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="vault-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search prompts…" />
+      </div>
+      <div class="vault-list">
+        <div class="vault-item">
+          <span class="vault-tag" style="background:rgba(59,130,246,0.12);color:var(--accent)">Code</span>
+          <div class="vault-info">
+            <div class="vault-title">Debug This</div>
+            <div class="vault-preview">Find and explain every bug in this code, then give a corrected version…</div>
+          </div>
+          <button class="vault-use-btn">Use</button>
+        </div>
+        <div class="vault-item">
+          <span class="vault-tag" style="background:rgba(20,184,166,0.1);color:var(--teal)">Research</span>
+          <div class="vault-info">
+            <div class="vault-title">Structured Summary</div>
+            <div class="vault-preview">Summarize this in: TL;DR, Key Points, Open Questions, and Next Steps…</div>
+          </div>
+          <button class="vault-use-btn">Use</button>
+        </div>
+        <div class="vault-item">
+          <span class="vault-tag" style="background:rgba(251,191,36,0.1);color:#FBBF24">Writing</span>
+          <div class="vault-info">
+            <div class="vault-title">Edit for Clarity</div>
+            <div class="vault-preview">Rewrite this to be 30% shorter, sharper, and more direct without losing…</div>
+          </div>
+          <button class="vault-use-btn">Use</button>
+        </div>
+        <div class="vault-item">
+          <span class="vault-tag" style="background:rgba(239,68,68,0.1);color:var(--danger)">Critique</span>
+          <div class="vault-info">
+            <div class="vault-title">Steel Man + Attack</div>
+            <div class="vault-preview">Give the strongest possible case for this, then systematically dismantle it…</div>
+          </div>
+          <button class="vault-use-btn">Use</button>
+        </div>
+        <div class="vault-item">
+          <span class="vault-tag" style="background:rgba(167,139,250,0.1);color:#A78BFA">Arch</span>
+          <div class="vault-info">
+            <div class="vault-title">System Design</div>
+            <div class="vault-preview">Design a scalable system for this use-case. Cover: data model, API shape…</div>
+          </div>
+          <button class="vault-use-btn">Use</button>
+        </div>
+      </div>
+
+      <button class="modal-create-btn" style="margin-top:16px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Save New Prompt
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     API KEY / MODEL MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="apiModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">API & Model</div>
+        <div class="modal-sub">Configure your Anthropic API connection</div>
+      </div>
+      <button class="modal-close" id="apiClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="api-field">
+        <label class="api-label">Anthropic API Key</label>
+        <input type="password" class="api-input" placeholder="sk-ant-api03-…" value="sk-ant-api03-••••••••••••••••" />
+      </div>
+      <div class="api-field">
+        <label class="api-label">Model</label>
+        <div class="model-pills">
+          <button class="model-pill">claude-3-haiku</button>
+          <button class="model-pill sel">claude-3-5-sonnet</button>
+          <button class="model-pill">claude-opus-4</button>
+          <button class="model-pill">claude-3-5-haiku</button>
+        </div>
+      </div>
+      <div class="api-field">
+        <label class="api-label">Max Tokens</label>
+        <input type="number" class="api-input" placeholder="8192" value="8192" />
+      </div>
+      <div class="api-field">
+        <label class="api-label">Temperature</label>
+        <input type="text" class="api-input" placeholder="0.7" value="0.7" />
+      </div>
+      <button class="modal-save-btn">Save Configuration</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CANVAS OVERLAY
+══════════════════════════════════════════ -->
+<div class="canvas-overlay hidden" id="canvasOverlay">
+  <div class="canvas-topbar">
+    <button class="canvas-back" id="canvasClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="canvas-title">flatten.py · Canvas</div>
+    <div class="canvas-tabs">
+      <button class="canvas-tab active" id="previewTab">Preview</button>
+      <button class="canvas-tab" id="codeTab">Code</button>
+    </div>
+  </div>
+  <div class="canvas-body">
+    <!-- Preview state -->
+    <div class="canvas-preview" id="canvasPreview">
+      <div class="canvas-placeholder">
+        <span class="canvas-placeholder-icon">🐍</span>
+        <p>Python · No visual output</p>
+        <p style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.2)">Run output would appear here</p>
+      </div>
+    </div>
+    <!-- Code view state -->
+    <div class="canvas-code-view hidden" id="canvasCodeView">
+      <div><span class="line-num">1</span><span style="color:#7DD3FC">def</span> <span style="color:#FCA5A5">flatten</span>(lst):</div>
+      <div><span class="line-num">2</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4B5563;font-style:italic">"""Recursively flatten nested lists."""</span></div>
+      <div><span class="line-num">3</span>&nbsp;&nbsp;&nbsp;&nbsp;result = []</div>
+      <div><span class="line-num">4</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#7DD3FC">for</span> item <span style="color:#7DD3FC">in</span> lst:</div>
+      <div><span class="line-num">5</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#7DD3FC">if</span> <span style="color:#FCA5A5">isinstance</span>(item, list):</div>
+      <div><span class="line-num">6</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result.<span style="color:#FCA5A5">extend</span>(<span style="color:#FCA5A5">flatten</span>(item))</div>
+      <div><span class="line-num">7</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#7DD3FC">else</span>:</div>
+      <div><span class="line-num">8</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result.<span style="color:#FCA5A5">append</span>(item)</div>
+      <div><span class="line-num">9</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#7DD3FC">return</span> result</div>
+      <div><span class="line-num">10</span>&nbsp;</div>
+      <div><span class="line-num">11</span><span style="color:#86EFAC">nested</span> = [<span style="color:#86EFAC">1</span>, [<span style="color:#86EFAC">2</span>, [<span style="color:#86EFAC">3</span>, <span style="color:#86EFAC">4</span>]], [<span style="color:#86EFAC">5</span>, <span style="color:#86EFAC">6</span>]]</div>
+      <div><span class="line-num">12</span><span style="color:#FCA5A5">print</span>(<span style="color:#FCA5A5">flatten</span>(<span style="color:#86EFAC">nested</span>))</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     MINIMAL JS (UI TOGGLES ONLY)
+══════════════════════════════════════════ -->
+<script>
+/* All JS here is purely for toggling visible UI states — no AI logic */
+const $ = id => document.getElementById(id);
+const hide = el => el.classList.add('hidden');
+const show = el => el.classList.remove('hidden');
+const toggle = (el, overlay) => {
+  el.classList.toggle('hidden');
+  if (overlay) overlay.classList.toggle('hidden');
+};
+
+// Drawer
+$('menuBtn').addEventListener('click', () => { show($('drawer')); show($('drawerOverlay')); });
+$('drawerClose').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); });
+$('drawerOverlay').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); });
+
+// Personas
+$('personasNavBtn').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); show($('personasModal')); });
+$('personasClose').addEventListener('click', () => hide($('personasModal')));
+$('personasModal').addEventListener('click', e => { if(e.target===$('personasModal')) hide($('personasModal')); });
+
+// Vault
+$('vaultNavBtn').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); show($('vaultModal')); });
+$('vaultClose').addEventListener('click', () => hide($('vaultModal')));
+$('vaultModal').addEventListener('click', e => { if(e.target===$('vaultModal')) hide($('vaultModal')); });
+
+// API modal
+$('vaultBtn').addEventListener('click', () => show($('apiModal')));
+$('apiClose').addEventListener('click', () => hide($('apiModal')));
+$('apiModal').addEventListener('click', e => { if(e.target===$('apiModal')) hide($('apiModal')); });
+
+// Canvas
+$('openCanvas').addEventListener('click', () => show($('canvasOverlay')));
+$('canvasClose').addEventListener('click', () => hide($('canvasOverlay')));
+
+// Canvas tabs
+$('previewTab').addEventListener('click', () => {
+  $('previewTab').classList.add('active'); $('codeTab').classList.remove('active');
+  show($('canvasPreview')); hide($('canvasCodeView'));
+});
+$('codeTab').addEventListener('click', () => {
+  $('codeTab').classList.add('active'); $('previewTab').classList.remove('active');
+  hide($('canvasPreview')); show($('canvasCodeView'));
+});
+
+// Model pills selection
+document.querySelectorAll('.model-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.model-pill').forEach(p => p.classList.remove('sel'));
+    pill.classList.add('sel');
+  });
+});
+
+// Auto-grow textarea
+const ta = document.querySelector('.input-field');
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 130) + 'px';
+});
+</script>
+</body>
+</html>
