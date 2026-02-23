@@ -1554,64 +1554,7 @@ nested = [<span class="str">1</span>, [<span class="str">2</span>, [<span class=
 <!-- ═══════════════════════════════════════
      MINIMAL JS (UI TOGGLES ONLY)
 ══════════════════════════════════════════ -->
-<script>
-/* All JS here is purely for toggling visible UI states — no AI logic */
-const $ = id => document.getElementById(id);
-const hide = el => el.classList.add('hidden');
-const show = el => el.classList.remove('hidden');
-const toggle = (el, overlay) => {
-  el.classList.toggle('hidden');
-  if (overlay) overlay.classList.toggle('hidden');
-};
+<script type="module" src="./js/main.js"></script>
 
-// Drawer
-$('menuBtn').addEventListener('click', () => { show($('drawer')); show($('drawerOverlay')); });
-$('drawerClose').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); });
-$('drawerOverlay').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); });
-
-// Personas
-$('personasNavBtn').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); show($('personasModal')); });
-$('personasClose').addEventListener('click', () => hide($('personasModal')));
-$('personasModal').addEventListener('click', e => { if(e.target===$('personasModal')) hide($('personasModal')); });
-
-// Vault
-$('vaultNavBtn').addEventListener('click', () => { hide($('drawer')); hide($('drawerOverlay')); show($('vaultModal')); });
-$('vaultClose').addEventListener('click', () => hide($('vaultModal')));
-$('vaultModal').addEventListener('click', e => { if(e.target===$('vaultModal')) hide($('vaultModal')); });
-
-// API modal
-$('vaultBtn').addEventListener('click', () => show($('apiModal')));
-$('apiClose').addEventListener('click', () => hide($('apiModal')));
-$('apiModal').addEventListener('click', e => { if(e.target===$('apiModal')) hide($('apiModal')); });
-
-// Canvas
-$('openCanvas').addEventListener('click', () => show($('canvasOverlay')));
-$('canvasClose').addEventListener('click', () => hide($('canvasOverlay')));
-
-// Canvas tabs
-$('previewTab').addEventListener('click', () => {
-  $('previewTab').classList.add('active'); $('codeTab').classList.remove('active');
-  show($('canvasPreview')); hide($('canvasCodeView'));
-});
-$('codeTab').addEventListener('click', () => {
-  $('codeTab').classList.add('active'); $('previewTab').classList.remove('active');
-  hide($('canvasPreview')); show($('canvasCodeView'));
-});
-
-// Model pills selection
-document.querySelectorAll('.model-pill').forEach(pill => {
-  pill.addEventListener('click', () => {
-    document.querySelectorAll('.model-pill').forEach(p => p.classList.remove('sel'));
-    pill.classList.add('sel');
-  });
-});
-
-// Auto-grow textarea
-const ta = document.querySelector('.input-field');
-ta.addEventListener('input', () => {
-  ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight, 130) + 'px';
-});
-</script>
 </body>
 </html>
