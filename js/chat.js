@@ -1,5 +1,7 @@
 import { state, saveState } from './state.js';
 import { streamChat } from './api.js';
+import { formatText } from './format.js';
+import { runAgentWorkflow } from './agent.js';
 
 let els = {};
 
@@ -41,9 +43,18 @@ async function handleUserSubmit() {
     const userMsg = { role: 'user', content: text };
     state.chat.history.push(userMsg);
 
-    // 4. Prepare Context for API
-    // Add System Prompt based on persona (for now, assume default)
-    // TODO: Implement dynamic personas in Part 3
+    // 4. Branch: Agent Mode vs Standard Mode
+    if (state.ui.isAgentMode) {
+        await handleAgentFlow(text);
+    } else {
+        await handleStandardFlow(text);
+    }
+}
+
+async function handleStandardFlow(text) {
+    // Prepare Context
+    // TODO: Implement dynamic personas in Part 3 (or later iteration, as requirements focused on Agent Mode)
+    // For now, use a static System Prompt or one from State if available
     const systemPrompt = {
         role: 'system',
         content: 'You are Anti-Silk, a helpful AI assistant.'
@@ -51,17 +62,19 @@ async function handleUserSubmit() {
 
     const messages = [systemPrompt, ...state.chat.history];
 
-    // 5. Append AI Placeholder Bubble
+    // Append AI Placeholder Bubble
     const aiBubble = appendMessage('assistant', ''); // Empty initially
     let fullAiResponse = '';
 
-    // 6. Stream API
+    // Stream API
     await streamChat(
         messages,
         (chunk) => {
             // onChunk
             fullAiResponse += chunk;
-            aiBubble.textContent = fullAiResponse; // Raw text for now
+            // Update bubble with Markdown (Warning: expensive on every chunk, but visually correct)
+            // Ideally we'd buffer or throttle, but for now we re-render.
+            aiBubble.innerHTML = formatText(fullAiResponse);
             scrollToBottom();
         },
         () => {
@@ -77,6 +90,54 @@ async function handleUserSubmit() {
         }
     );
 }
+
+async function handleAgentFlow(userPrompt) {
+    // 1. Create Terminal Bubble
+    const terminal = appendTerminalBubble();
+
+    // 2. Prepare AI Bubble (but hide it initially? Or create it when Phase 3 starts?)
+    // Requirement: "When the final stream starts (Phase 3), hide/remove the terminal and stream the text into a normal AI bubble."
+    let aiBubble = null;
+    let fullAiResponse = '';
+
+    await runAgentWorkflow(
+        userPrompt,
+        state.chat.history, // Pass history if needed by agent logic (current implementation doesn't use it heavily but good for context)
+        (statusText) => {
+            // onUpdate (Phase 1 & 2)
+            updateTerminalBubble(terminal, statusText);
+        },
+        {
+            // onComplete (Phase 3 Handlers)
+            onChunk: (chunk) => {
+                // First chunk? Hide terminal, show AI bubble
+                if (!aiBubble) {
+                    terminal.classList.add('hidden'); // Or remove()
+                    // Create AI bubble
+                    aiBubble = appendMessage('assistant', '');
+                }
+
+                fullAiResponse += chunk;
+                aiBubble.innerHTML = formatText(fullAiResponse);
+                scrollToBottom();
+            },
+            onFinish: () => {
+                // Done
+                if (fullAiResponse) {
+                    state.chat.history.push({ role: 'assistant', content: fullAiResponse });
+                    saveState();
+                }
+                toggleInput(true);
+            }
+        },
+        (error) => {
+            // onError
+            appendSystemMessage(`Agent Error: ${error.message}`);
+            toggleInput(true);
+        }
+    );
+}
+
 
 // --- UI Helpers ---
 
@@ -94,7 +155,7 @@ function appendMessage(role, text) {
     avatar.textContent = role === 'user' ? 'S' : 'A';
 
     const name = document.createElement('span');
-    name.textContent = role === 'user' ? 'User' : 'Anti-Silk'; // TODO: User name from config
+    name.textContent = role === 'user' ? 'User' : 'Anti-Silk';
 
     const time = document.createElement('span');
     time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -104,24 +165,75 @@ function appendMessage(role, text) {
     // Bubble
     const bubble = document.createElement('div');
     bubble.className = `bubble ${role === 'user' ? 'user' : 'ai'}`;
-    bubble.textContent = text;
+
+    // Format text initially
+    bubble.innerHTML = formatText(text);
 
     row.append(meta, bubble);
     els.chatArena.appendChild(row);
     scrollToBottom();
 
-    return bubble; // Return bubble reference for streaming updates
+    return bubble; // Return bubble reference
+}
+
+function appendTerminalBubble() {
+    const row = document.createElement('div');
+    row.className = 'msg-row ai';
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar ai-avatar';
+    avatar.textContent = 'A';
+    const name = document.createElement('span');
+    name.textContent = 'Anti-Silk · Agent Mode';
+    meta.append(avatar, name);
+
+    const terminal = document.createElement('div');
+    terminal.className = 'terminal-bubble';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'term-header';
+    header.innerHTML = '<div class="term-dot"></div> AGENT ACTIVE';
+
+    terminal.appendChild(header);
+    // Lines container (we will append lines here)
+    // But standard structure in index.html example was simple lines.
+
+    row.append(meta, terminal);
+    els.chatArena.appendChild(row);
+    scrollToBottom();
+
+    return terminal;
+}
+
+function updateTerminalBubble(terminal, text) {
+    // Create a new line div
+    const line = document.createElement('div');
+    line.className = 'term-line';
+
+    // Simple text content or HTML for cursor?
+    // Requirement: "Plain Text"
+    line.textContent = text;
+
+    // Check if there is a cursor element currently?
+    // In the example HTML, there was a cursor. We can add it to the latest line if we want fancy UI.
+    // For now, simple append.
+
+    terminal.appendChild(line);
+    scrollToBottom();
 }
 
 function appendSystemMessage(text) {
     const row = document.createElement('div');
-    row.className = 'msg-row ai'; // Reuse AI layout for alignment
+    row.className = 'msg-row ai';
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble ai';
     bubble.style.color = 'var(--danger)';
     bubble.style.borderColor = 'var(--danger)';
-    bubble.style.background = 'rgba(239, 68, 68, 0.1)'; // Light red bg
+    bubble.style.background = 'rgba(239, 68, 68, 0.1)';
     bubble.textContent = text;
 
     row.appendChild(bubble);
